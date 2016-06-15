@@ -1,0 +1,11 @@
+version: '2'
+services:
+  docker-grafana-graphite:
+    build: .
+    image: 1and1internet/docker-grafana-graphite
+    user: "100000"
+    ports:
+      - "2003:2003"
+      - "8081:8080"
+    environment:
+      - "SUPERVISORD_EXIT_ON_FATAL=0"
