@@ -1,6 +1,8 @@
 #!/bin/bash
 SECRET_KEY=$(python -c 'import random; import string; print "".join([random.SystemRandom().choice(string.digits + string.letters) for i in range(150)])')
 
+mkdir -p /data/graphite /data/logs/graphite /data/grafana /data/logs/grafana
+
 cat <<EOF > /etc/graphite/local_settings.py
 SECRET_KEY = '${SECRET_KEY}'
 TIME_ZONE = 'Europe/London'
@@ -26,5 +28,5 @@ DATABASES = {
     }
 }
 EOF
-ls -l /
+
 graphite-manage syncdb --noinput
