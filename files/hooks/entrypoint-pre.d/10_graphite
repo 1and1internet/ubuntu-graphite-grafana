@@ -26,5 +26,5 @@ DATABASES = {
     }
 }
 EOF
-
+ls -l /
 graphite-manage syncdb --noinput
