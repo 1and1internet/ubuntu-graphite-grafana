@@ -1,0 +1,122 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: graphite
+objects:
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: graphite
+    name: graphite
+  spec:
+    host:
+    ports:
+      targetPort: web
+    to:
+      kind: Service
+      name: graphite
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+    creationTimestamp: null
+    name: carbon
+  spec:
+    ClusterIP: 172.30.10.11
+    PortalIP: 172.30.10.11
+    ports:
+    - name: 2003-tcp
+      nodePort: 32003
+      port: 2003
+      protocol: TCP
+      targetPort: 2003
+    selector:
+      name: ${APP_SERVICE_NAME}
+    sessionAffinity: None
+    type: NodePort
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+    creationTimestamp: null
+    name: graphite
+  spec:
+    ports:
+    - name: 80-tcp
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      name: ${APP_SERVICE_NAME}
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      description: Definition for deploying Graphite+Grafana
+    labels:
+      service: graphite
+    name: graphite
+  spec:
+    replicas: 1
+    selector:
+      name: ${APP_SERVICE_NAME}
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        annotations:
+        labels:
+          name: ${APP_SERVICE_NAME}
+          service: graphite
+        name: ${APP_SERVICE_NAME}
+      spec:
+        containers:
+        - capabilities: {}
+          image: 1and1internet/ubuntu-graphite-grafana
+          imagePullPolicy: Always
+          livenessProbe:
+            initialDelaySeconds: 5
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 1
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          readinessProbe:
+            initialDelaySeconds: 5
+            tcpSocket:
+              port: 8080
+            timeoutSeconds: 1
+          name: ${APP_SERVICE_NAME}
+          securityContext:
+            privileged: true
+            runAsUser: 50000
+          volumeMounts:
+          - name: graphite-data-vol
+            mountPath: /data
+            readOnly: false
+        volumes:
+        - name: graphite-data-vol
+          hostPath:
+            path: /storage/infra01/monitoring/graphite
+        resources:
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+    triggers:
+    - type: ConfigChange
+parameters:
+- description: Application service name
+  displayName: Application service name
+  name: APP_SERVICE_NAME
+  required: true
+  from: graphite-[a-z]{5}
+  generate: expression
