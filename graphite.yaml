@@ -97,17 +97,20 @@ objects:
             timeoutSeconds: 1
           name: ${APP_SERVICE_NAME}
           securityContext:
-            privileged: false
-        volumeMounts:
-        - mountPath: /data
-          name: graphite-data-vol
+            privileged: true
+            runAsUser: 50000
+          volumeMounts:
+          - name: graphite-data-vol
+            mountPath: /data
+            readOnly: false
+        volumes:
+        - name: graphite-data-vol
+          hostPath:
+            path: /storage/infra01/monitoring/graphite
+        resources:
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
-      volumes:
-      - name: graphite-data-vol
-        persistentVolumeClaim:
-          claimName: graphite-data-pvc
     triggers:
     - type: ConfigChange
 parameters:
