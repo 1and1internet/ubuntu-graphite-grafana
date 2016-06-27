@@ -22,4 +22,6 @@ RUN \
   echo "daemon off;" >> /etc/nginx/nginx.conf && \
   sed -i -e '/^user www-data;/d' /etc/nginx/nginx.conf
 
+COPY files/etc/carbon/storage-schemas.conf /etc/carbon/
+
 EXPOSE 2003 8080
